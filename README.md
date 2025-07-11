@@ -91,7 +91,7 @@ git clone https://github.com/taesungp/contrastive-unpaired-translation CUT
 cd CUT
 ```
 
-- Install PyTorch 1.1 and other dependencies (e.g., torchvision, visdom, dominate, gputil).
+- Install PyTorch 1.1 and other dependencies (e.g., torchvision, tensorboard, dominate, gputil).
 
   For pip users, please type the command `pip install -r requirements.txt`.
 
@@ -106,7 +106,7 @@ bash ./datasets/download_cut_dataset.sh grumpifycat
 ```
 The dataset is downloaded and unzipped at `./datasets/grumpifycat/`.
 
-- To view training results and loss plots, run `python -m visdom.server` and click the URL http://localhost:8097.
+- To view training results and loss plots, run `tensorboard --logdir=./logs` and click the URL http://localhost:6006.
 
 - Train the CUT model:
 ```bash

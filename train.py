@@ -1,9 +1,12 @@
 import time
 import torch
+import numpy as np
+import wandb
 from options.train_options import TrainOptions
 from data import create_dataset
 from models import create_model
 from util.visualizer import Visualizer
+from util import util
 
 
 if __name__ == '__main__':
@@ -19,6 +22,10 @@ if __name__ == '__main__':
     total_iters = 0                # the total number of training iterations
 
     optimize_time = 0.1
+
+    # Initialize wandb if project name is provided
+    if opt.wandb_project:
+        wandb.init(project=opt.wandb_project, name=opt.name, config=vars(opt))
 
     times = []
     for epoch in range(opt.epoch_count, opt.n_epochs + opt.n_epochs_decay + 1):    # outer loop for different epochs; we save the model by <epoch_count>, <epoch_count>+<save_latest_freq>
@@ -49,16 +56,28 @@ if __name__ == '__main__':
                 torch.cuda.synchronize()
             optimize_time = (time.time() - optimize_start_time) / batch_size * 0.005 + 0.995 * optimize_time
 
-            if total_iters % opt.display_freq == 0:   # display images on visdom and save images to a HTML file
+            if total_iters % opt.display_freq == 0:   # display images on tensorboard and save images to a HTML file
                 save_result = total_iters % opt.update_html_freq == 0
                 model.compute_visuals()
-                visualizer.display_current_results(model.get_current_visuals(), epoch, save_result)
-
+                visuals = model.get_current_visuals()
+                visualizer.display_current_results(visuals, epoch, save_result)
+                # Log images to wandb (concatenated if possible)
+                concat_keys = ['real_A', 'fake_B', 'real_B', 'idt_B']
+                images_to_concat = []
+                for k in concat_keys:
+                    if k in visuals:
+                        image_numpy = util.tensor2im(visuals[k])
+                        images_to_concat.append(image_numpy)
+                if opt.wandb_project and len(images_to_concat) > 0:
+                    concat_image = np.concatenate(images_to_concat, axis=1) if len(images_to_concat) > 1 else images_to_concat[0]
+                    wandb.log({"results": [wandb.Image(concat_image, caption=f"Epoch {epoch}, Iter {total_iters}")]}, step=total_iters)
             if total_iters % opt.print_freq == 0:    # print training losses and save logging information to the disk
                 losses = model.get_current_losses()
                 visualizer.print_current_losses(epoch, epoch_iter, losses, optimize_time, t_data)
                 if opt.display_id is None or opt.display_id > 0:
                     visualizer.plot_current_losses(epoch, float(epoch_iter) / dataset_size, losses)
+                if opt.wandb_project:
+                    wandb.log({**losses, "epoch": epoch, "iter": epoch_iter}, step=total_iters)
 
             if total_iters % opt.save_latest_freq == 0:   # cache our latest model every <save_latest_freq> iterations
                 print('saving the latest model (epoch %d, total_iters %d)' % (epoch, total_iters))
@@ -75,3 +94,9 @@ if __name__ == '__main__':
 
         print('End of epoch %d / %d \t Time Taken: %d sec' % (epoch, opt.n_epochs + opt.n_epochs_decay, time.time() - epoch_start_time))
         model.update_learning_rate()                     # update learning rates at the end of every epoch.
+
+    # Close TensorBoard writer when training finishes
+    if hasattr(visualizer, 'close'):
+        visualizer.close()
+    if opt.wandb_project:
+        wandb.finish()

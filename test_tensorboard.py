@@ -34,9 +34,9 @@ def test_tensorboard_logging():
     
     # Create dummy visuals (fake images)
     visuals = OrderedDict()
-    visuals['real_A'] = torch.randn(3, 256, 256)  # Random RGB image
-    visuals['fake_B'] = torch.randn(3, 256, 256)  # Random RGB image
-    visuals['real_B'] = torch.randn(3, 256, 256)  # Random RGB image
+    visuals['real_A'] = torch.randn(1, 3, 256, 256)  # Random RGB image, batch size 1
+    visuals['fake_B'] = torch.randn(1, 3, 256, 256)
+    visuals['real_B'] = torch.randn(1, 3, 256, 256)
     
     # Create dummy losses
     losses = OrderedDict()

@@ -84,6 +84,9 @@ class Visualizer():
             util.mkdirs([self.web_dir, self.img_dir])
         # create a logging file to store training losses
         self.log_name = os.path.join(opt.checkpoints_dir, opt.name, 'loss_log.txt')
+        # Ensure the directory exists before opening the log file
+        log_dir = os.path.dirname(self.log_name)
+        os.makedirs(log_dir, exist_ok=True)
         with open(self.log_name, "a") as log_file:
             now = time.strftime("%c")
             log_file.write('================ Training Loss (%s) ================\n' % now)
@@ -100,15 +103,30 @@ class Visualizer():
             epoch (int) - - the current epoch
             save_result (bool) - - if save the current results to an HTML file
         """
-        if self.writer is not None:  # log images to TensorBoard
+        # TensorBoard: concatenate images if all are present
+        concat_keys = ['real_A', 'fake_B', 'real_B', 'idt_B']
+        images_to_concat = []
+        for k in concat_keys:
+            if k in visuals:
+                image_numpy = util.tensor2im(visuals[k])
+                images_to_concat.append(image_numpy)
+        if self.writer is not None and len(images_to_concat) > 0:
+            # Concatenate horizontally
+            concat_image = np.concatenate(images_to_concat, axis=1)  # shape (H, W*4, C)
+            # Convert to tensorboard format (C, H, W)
+            if len(concat_image.shape) == 3:
+                image_tensor = torch.from_numpy(concat_image.transpose([2, 0, 1])).float() / 255.0
+            else:
+                image_tensor = torch.from_numpy(concat_image).unsqueeze(0).float() / 255.0
+            self.writer.add_image('results', image_tensor, epoch)
+        # Log individual images if not concatenating
+        elif self.writer is not None:
             for label, image in visuals.items():
                 image_numpy = util.tensor2im(image)
-                # Convert numpy image (H, W, C) to tensor (C, H, W) for TensorBoard
                 if len(image_numpy.shape) == 3:
                     image_tensor = torch.from_numpy(image_numpy.transpose([2, 0, 1])).float() / 255.0
                 else:
                     image_tensor = torch.from_numpy(image_numpy).unsqueeze(0).float() / 255.0
-                
                 self.writer.add_image(f'{label}', image_tensor, epoch)
 
         if self.use_html and (save_result or not self.saved):  # save images to an HTML file if they haven't been saved.

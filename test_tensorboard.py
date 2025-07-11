@@ -9,12 +9,14 @@ import numpy as np
 from collections import OrderedDict
 import os
 import sys
+import wandb
 
 # Add the project root to the path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from options.train_options import TrainOptions
 from util.visualizer import Visualizer
+from util import util
 
 def test_tensorboard_logging():
     """Test function to verify TensorBoard logging works"""
@@ -28,6 +30,10 @@ def test_tensorboard_logging():
     opt.no_html = True
     opt.display_id = 1
     opt.tensorboard_log_dir = "./test_logs"
+    
+    # Initialize wandb if project name is provided
+    if opt.wandb_project:
+        wandb.init(project=opt.wandb_project, name=opt.name, config=vars(opt))
     
     # Create visualizer
     visualizer = Visualizer(opt)
@@ -53,6 +59,17 @@ def test_tensorboard_logging():
         # Log images
         visualizer.display_current_results(visuals, epoch, True)
         
+        # Log images to wandb (concatenated if possible)
+        concat_keys = ['real_A', 'fake_B', 'real_B', 'idt_B']
+        images_to_concat = []
+        for k in concat_keys:
+            if k in visuals:
+                image_numpy = util.tensor2im(visuals[k])
+                images_to_concat.append(image_numpy)
+        if opt.wandb_project and len(images_to_concat) > 0:
+            concat_image = np.concatenate(images_to_concat, axis=1) if len(images_to_concat) > 1 else images_to_concat[0]  # HWC format for wandb
+            wandb.log({"results": [wandb.Image(concat_image, caption=f"Epoch {epoch}")]}, step=epoch)
+        
         # Log losses
         for iter_count in range(0, 100, 20):
             counter_ratio = iter_count / 100.0
@@ -63,9 +80,13 @@ def test_tensorboard_logging():
             
             visualizer.plot_current_losses(epoch, counter_ratio, noisy_losses)
             visualizer.print_current_losses(epoch, iter_count, noisy_losses, 0.1, 0.05)
+            if opt.wandb_project:
+                wandb.log({**noisy_losses, "epoch": epoch, "iter": iter_count}, step=epoch * 100 + iter_count)
     
     # Close visualizer
     visualizer.close()
+    if opt.wandb_project:
+        wandb.finish()
     
     print("\nTensorBoard test completed!")
     print(f"Logs saved to: {opt.tensorboard_log_dir}/{opt.name}")

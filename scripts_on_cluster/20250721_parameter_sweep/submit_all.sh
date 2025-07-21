@@ -1,6 +1,6 @@
 #!/bin/bash
 
-scripts_dir="/home/sibwang/contrastive-unpaired-translation/scripts_on_cluster/20250711_parameter_sweep/batch_scripts"
+scripts_dir="./batch_scripts"
 
 files=($(ls $scripts_dir/*.run | sort))
 file_count=${#files[@]}

@@ -1,0 +1,46 @@
+#!/bin/bash -l
+
+#SBATCH --job-name cut_<<<NAME>>>
+#SBATCH --nodes 1
+#SBATCH --ntasks 1
+#SBATCH --cpus-per-task 32
+#SBATCH --mem 64GB
+#SBATCH --time 48:00:00
+#SBATCH --partition=l40s
+#SBATCH --qos=normal
+#SBATCH --gres=gpu:1
+#SBATCH --output <<<OUTPUT_FILE>>>
+
+echo "Hello from $(hostname)"
+
+# Set up environment and package
+conda activate biomechpose
+
+# Define paths
+data_root="/scratch/sibwang/contrastive-unpaired-translation/bulk_data/style_transfer_cut/datasets/spotlight202506_to_aymanns2022"
+project_root="/home/sibwang/contrastive-unpaired-translation/"
+
+cd $project_root
+export WANDB_DIR="<<<WANDB_DIR>>>"
+
+# Training
+echo "Training starting at $(date)"
+
+python -u train.py \
+    --dataroot $data_root \
+    --name <<<NAME>>> \
+    --CUT_mode CUT \
+    --checkpoints_dir <<<CHECKPOINT_DIR>>> \
+    --tensorboard_log_dir <<<LOG_DIR>>> \
+    --lr 0.00005 \
+    --n_epochs 40 \
+    --n_epochs_decay 40 \
+    --save_epoch_freq 1 \
+    --num_threads 32 \
+    --ngf <<<NGF>>> \
+    --netG <<<NETG>>> \
+    --batch_size <<<BATCH_SIZE>>> \
+    --lambda_GAN <<<LAMBDA_GAN>>> \
+    --wandb_project cut-aymanns2022-to-spotlight202506
+
+echo "Training ends at $(date)"

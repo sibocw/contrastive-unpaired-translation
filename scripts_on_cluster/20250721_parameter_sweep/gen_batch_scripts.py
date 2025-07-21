@@ -43,7 +43,7 @@ for ngf in [32, 64]:
                     .replace("<<<CHECKPOINT_DIR>>>", str(checkpoint_dir / run_name)) \
                     .replace("<<<LOG_DIR>>>", str(log_dir / run_name)) \
                     .replace("<<<WANDB_DIR>>>", str(wandb_dir / run_name)) \
-                    .replace("<<<OUTPUT_FILE>>>", str(data_output_dir / f"outputs/{run_name}.out")) \
+                    .replace("<<<OUTPUT_FILE>>>", str(script_output_dir.parent / f"outputs/{run_name}.out")) \
                     .replace("<<<NAME>>>", run_name)
 
                 filename = f"{run_name}.run"

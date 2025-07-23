@@ -51,3 +51,7 @@ test/data/legacy_serialized.pt
 *.out
 test_checkpoints/
 test_logs/
+checkpoints/
+from_scitas/
+output_images/
+logs/

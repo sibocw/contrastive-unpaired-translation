@@ -1,9 +1,9 @@
 import argparse
 import os
-from util import util
+from cut.util import util
 import torch
-import models
-import data
+import cut.models
+import cut.data
 
 
 class BaseOptions():
@@ -90,7 +90,7 @@ class BaseOptions():
 
         # modify model-related parser options
         model_name = opt.model
-        model_option_setter = models.get_option_setter(model_name)
+        model_option_setter = cut.models.get_option_setter(model_name)
         parser = model_option_setter(parser, self.isTrain)
         if self.cmd_line is None:
             opt, _ = parser.parse_known_args()  # parse again with new defaults
@@ -99,7 +99,7 @@ class BaseOptions():
 
         # modify dataset-related parser options
         dataset_name = opt.dataset_mode
-        dataset_option_setter = data.get_option_setter(dataset_name)
+        dataset_option_setter = cut.data.get_option_setter(dataset_name)
         parser = dataset_option_setter(parser, self.isTrain)
 
         # save and return the parser

@@ -3,7 +3,7 @@ import os
 import sys
 import ntpath
 import time
-from . import util, html
+from cut.util import util, html
 from torch.utils.tensorboard import SummaryWriter
 import torch
 

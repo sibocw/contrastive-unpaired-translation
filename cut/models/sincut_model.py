@@ -1,5 +1,5 @@
 import torch
-from .cut_model import CUTModel
+from cut.models.cut_model import CUTModel
 
 
 class SinCUTModel(CUTModel):

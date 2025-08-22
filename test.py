@@ -32,11 +32,13 @@ from data import create_dataset
 from models import create_model
 from util.visualizer import save_images
 from util import html
+from options.option_stats import OptionsWrapper
 import util.util as util
 
 
 if __name__ == '__main__':
     opt = TestOptions().parse()  # get test options
+    opt = OptionsWrapper(opt)  # wrap options to track usage
     # hard-code some parameters for test
     opt.num_threads = 0   # test code only supports num_threads = 1
     opt.batch_size = 1    # test code only supports batch_size = 1
@@ -68,3 +70,5 @@ if __name__ == '__main__':
             print('processing (%04d)-th image... %s' % (i, img_path))
         save_images(webpage, visuals, img_path, width=opt.display_winsize)
     webpage.save()  # save the HTML
+
+    opt.print_summary()

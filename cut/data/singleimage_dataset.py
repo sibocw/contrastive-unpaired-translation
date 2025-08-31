@@ -1,10 +1,10 @@
 import numpy as np
 import os.path
-from data.base_dataset import BaseDataset, get_transform
-from data.image_folder import make_dataset
+from cut.data.base_dataset import BaseDataset, get_transform
+from cut.data.image_folder import make_dataset
 from PIL import Image
 import random
-import util.util as util
+from cut.util import util
 
 
 class SingleImageDataset(BaseDataset):

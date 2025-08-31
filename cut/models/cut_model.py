@@ -1,9 +1,9 @@
 import numpy as np
 import torch
-from .base_model import BaseModel
-from . import networks
-from .patchnce import PatchNCELoss
-import util.util as util
+from cut.models.base_model import BaseModel
+from cut.models import networks
+from cut.models.patchnce import PatchNCELoss
+from cut.util import util
 
 
 class CUTModel(BaseModel):
